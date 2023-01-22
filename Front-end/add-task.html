@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="stylesheet" href="style.css">
+        <title>Add a task:</title>
+    </head>
+    <body>
+        <h1>Add a Task:</h1>
+        <div>
+            <div class="label-div override-div"><label for="taskName">Task Name:</label></div>
+            <div class="input-div override-div"><input type="text" id="taskName" required></div>
+        </div>
+        <div>
+            <div class="label-div override-div"><label for="subject">Subject: </label></div>
+            <div class="input-div override-div"><select id="subject" required>
+                <option>Math</option>
+                <option>Science</option>
+                <option>English</option>
+                <option>History</option>
+            </select></div>
+        </div>
+        <div>
+            <div class="label-div override-div"><label for="taskType">Type: </label></div>
+            <div class="input-div override-div"><select id="taskType" required>
+                <option>Essay</option>
+                <option>Quiz</option>
+                <option></option>
+            </select></div>
+        </div>
+        <h3>If your task is something that has a fixed time, such as work, add it below.</h3>
+        <div>
+            <div class="label-div override-div"><label for="startTime">Start Time:</label></div>
+            <div class="input-div override-div"><input type="time" id="startTime" required></div>
+        </div>
+        <div>
+            <div class="label-div override-div"><label for="endTime">End Time:</label></div>
+            <div class="input-div override-div"><input type="time" id="endTime" required></div>
+        </div>
+        <div>
+            <button class="welcome-btn">Add</button>
+        </div>
+    </body>
+</html>
