@@ -69,21 +69,34 @@ const requestTokens = new Map()
 const accessTokens = new Map()
 
 
+app.get('/', (req, res) => {
+  res.sendFile('index.html', { root: __dirname });
+})
+
+
 app.get('/register', (req, res) => {
   res.sendFile('register.html', { root: __dirname })
 })
 
-app.get("/", (req, res) => {
-  res.redirect('/register')});
+app.get('/login', (req, res) => {
+    res.sendFile('login.html', { root: __dirname })
+    if (req.cookies.userid) {
+      res.redirect('/link')
+    }
+  })
+
 
 app.get('/link', async (req, res) => {
   // A primitive way of getting the user ID.
+  if (!req.query.userid || !req.query.username) {
+    res.sendFile("login.html", { root: __dirname})
+    return
+  }
   const userId = req.query.userid
   const username = atob(req.query.username)
   if (!userId) {
     res.redirect("/register")
   }
-
   const token = accessTokens.get(userId)
   const oauthToken = req.query.oauth_token
   if (!token) {
@@ -145,22 +158,44 @@ app.get('/link', async (req, res) => {
   res.cookie('username', username)
   res.cookie("uid", uid)
   console.log("cookies set")
-  // At this point, I should now have access to the user's Schoology
-  const apiResult = await oauth.get(`${apiBase}/users/${uid}/sections`, key, secret)
-    .then(toJson)
-  return res.send(`<h4>Courses</h4><ul>${
-    apiResult.section.map(section => {
-      return `<li>${section.course_title}: ${section.section_title}</li>`
-    }).join('') || '<li>No courses were found for this user.</li>'
-  }</ul>`)
+  // // At this point, I should now have access to the user's Schoology
+  // const apiResult = await oauth.get(`${apiBase}/users/${uid}/sections`, key, secret)
+  //   .then(toJson)
+  // return res.send(`<h4>Courses</h4><ul>${
+  //   apiResult.section.map(section => {
+  //     return `<li>${section.course_title}: ${section.section_title}</li>`
+  //   }).join('') || '<li>No courses were found for this user.</li>'
+  // }</ul>`)
+  res.redirect('/home')
 })
 
 
-app.get('/home', function (req, res) {
-  res.sendFile('home.html', { root: __dirname })});
+// app.get('/home', function (req, res) {
+//   res.sendFile('home.html', { root: __dirname })});
 
+
+app.get("/home", async (req, res) => {
+  const userId = req.cookies.userid;
+  if(!userId) {
+    res.redirect('/register');
+  } else {
+    const token = accessTokens.get(userId);
+    if (!token) {
+      res.redirect("/register")
+    }
+    try {
+      // const [data] = await oauth.get(`${apiBase}/users/me`, token.key, token.secret);
+      // const userData = JSON.parse(data);
+      // res.send(`<h1>Hello ${userData.name.full}</h1>`);
+      res.send("hi")
+    } catch (err) {
+      console.log(err);
+      res.send(`<h1>An error occurred</h1>`);
+    }
+  }
+});
 
 
 app.listen(port, () => {
-  console.log(`Example app listening at http://localhost:${port}`)
+  console.log(`Example app listening at http://localhost${port}`)
 })

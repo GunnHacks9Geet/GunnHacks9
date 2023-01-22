@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+    <!--  login page  -->
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Login</title>
+        <meta name="description" content="whomst" />
+        <h1>Login</h1>
+        <script>
+            async function sha256(source) {
+  const sourceBytes = new TextEncoder().encode(source);
+  const digest = await crypto.subtle.digest("SHA-256", sourceBytes);
+  const resultBytes = [...new Uint8Array(digest)];
+  return resultBytes.map(x => x.toString(16).padStart(2, '0')).join("");
+};
+ 
+      $(document).ready(function() {
+          $('form#login-form').submit(function(event) {
+              event.preventDefault();
+              var formData = {
+                  'username': $('input[name=username]').val(),
+                  'password': $('input[name=password]').val()
+              };
+              var dataString = JSON.stringify(formData);
+              if (!document.cookie) {
+              sha256(dataString).then(function(hashedData) {
+                  window.location.href = '/link?username=' + btoa($('input[name=username]').val(),) +'&userid=' + hashedData;
+                  console.log(1)
+              });
+            }
+            else {
+                window.location.href = "/home"
+                console.log(2)
+            }
+
+          });
+      });
+  </script>
+    </head>
+    <body>
+        <form id="login-form" action="/home" method="get">
+            <p>
+                <label>
+                    Username:
+                    <input type="text" name="username" placeholder="Username" autofocus>
+                    Password:
+                    <input type="password" name="password" placeholder="Password" autofocus>
+                </label>
+            </p>
+            <input type="submit" value="ok">
+        </form>
+    </body>
+</html>
