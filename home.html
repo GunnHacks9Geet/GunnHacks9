@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+    <!-- say hi + name by using the schoology api and the oauth token in localstorage -->
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>whomst</title>
+        <meta name="description" content="whomst" />
+    </head>
+    <body>
+        <a>Hi</a>
+        <script>
+             http.post('home', userCredentials)
+    .then(response => response.json())
+    .then(responseJson => {
+      window.localStorage.setItem('oauth_token', responseJson.oauth_token)
+  })
+        </script>
+    </body>
+</html>

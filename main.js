@@ -1,80 +1,158 @@
-const express = require("express");
-const request = require("request");
-const passport = require("passport");
-const OAuth1Strategy = require("passport-oauth1");
-const app = express();
+// node oauth-3leg/app2.js
 
+const express = require('express')
+const app = express()
+const port = 3000
 
-const clientId = "dcc125ec557819caff204e151c470240063ccaf06";
-const clientSecret = "685443c62633b13178025bb47b5f9e78";
-const callbackUrl = "https://google.com";
+const nodeUtil = require('util')
 
-passport.use('schoology', new OAuth1Strategy({
-    consumerKey: clientId,
-    consumerSecret: clientSecret,
-    callbackURL: "http://127.0.0.1:3000/auth/example/callback",
-    signatureMethod: "RSA-SHA1",
-    sgyDomain: "https://app.schoology.com",
-    requestTokenURL: "https://api.schoology.com/v1/oauth/request_token",
-  },
-  function(token, tokenSecret, profile, cb) {
-    User.findOrCreate({ exampleId: profile.id }, function (err, user) {
-      return cb(err, user);
-    });
+const apiBase = 'https://api.schoology.com/v1'
+const sgyDomain = 'https://app.schoology.com'
+
+const key = "dcc125ec557819caff204e151c470240063ccaf06";
+const secret = "685443c62633b13178025bb47b5f9e78";
+
+const { OAuth } = require('oauth')
+const oauth = new OAuth(
+  `${apiBase}/oauth/request_token`,
+  `${apiBase}/oauth/access_token`,
+  key,
+  secret,
+  '1.0',
+  null,
+  'HMAC-SHA1'
+)
+oauth.setClientOptions({
+  requestTokenHttpMethod: 'GET',
+  accessTokenHttpMethod: 'GET',
+  followRedirects: true
+})
+
+// node-oauth uses callbacks òAó
+function promiseify (fn) {
+  return (...args) => new Promise((resolve, reject) => {
+    fn(...args, (err, ...out) => {
+      if (err) {
+        err.args = args
+        err.out = out
+        console.error(err, out)
+        reject(err)
+      } else {
+        resolve(out)
+      }
+    })
+  })
+}
+
+oauth.getOAuthRequestToken = promiseify(oauth.getOAuthRequestToken.bind(oauth))
+oauth.getOAuthAccessToken = promiseify(oauth.getOAuthAccessToken.bind(oauth))
+oauth.get = promiseify(oauth.get.bind(oauth))
+
+function toJson ([data]) {
+  return JSON.parse(data)
+}
+// node-oauth only follows 301 and 302 HTTP statuses, but Schoology redirects
+// /users/me with a 303 status >_<
+function follow303 (err) {
+  if (err.statusCode === 303) {
+    const [, request] = err.out
+    console.log(request.headers.location)
+    return oauth.get(request.headers.location, ...err.args.slice(1))
+  } else {
+    return Promise.reject(err)
   }
-));
+}
 
+const requestTokens = new Map()
+const accessTokens = new Map()
+
+app.get('/', async (req, res) => {
+  // A primitive way of getting the user ID.
+  const userId = req.query.whomst
+  if (!userId) {
+    return res.sendFile('whomst.html', { root: __dirname })
+  }
+
+  const token = accessTokens.get(userId)
+  const oauthToken = req.query.oauth_token
+  if (!token) {
+    // Authenticate user
+    if (oauthToken) {
+      // The user has returned from Schoology with an OAuth token
+      const requestToken = requestTokens.get(userId)
+      if (!requestToken) {
+        return res.status(401).send('"someone\'s tampering with requests" -sgy')
+      }
+      if (requestToken.key !== oauthToken) {
+        return res.status(401).send('"someone\'s tampering with requests" -sgy')
+      }
+      const [key, secret] = await oauth.getOAuthAccessToken(
+        requestToken.key,
+        requestToken.secret
+      )
+      accessTokens.set(userId, { key, secret })
+      requestTokens.delete(userId)
+      // Remove the oauth_token parameter (see below)
+    } else {
+      // Redirect the user to Schoology to let them authorize me access to their
+      // accounts
+      const [key, secret] = await oauth.getOAuthRequestToken()
+      requestTokens.set(userId, { key, secret })
+      // https://stackoverflow.com/a/10185427
+      const fullUrl = "superindianredpagerecognition.agastyasandhuja.repl.co/callback"
+      return res.redirect(`${sgyDomain}/oauth/authorize?${new URLSearchParams({
+        oauth_callback: fullUrl,
+        oauth_token: key
+      })}`)
+    }
+  }
+
+  // Regardless of whether the user has been authenticated, remove the
+  // oauth_token parameter from the URL.
+  if (oauthToken) {
+    delete req.query.oauth_token
+    return res.redirect('?' + new URLSearchParams(req.query))
+  }
+
+  const { key, secret } = token
+  const { uid } = await oauth.get(`${apiBase}/users/me`, key, secret)
+    .catch(follow303)
+    .then(toJson)
+    .catch(err => {
+      if (err.statusCode === 401) {
+        // Token expired
+        accessTokens.delete(userId)
+        res.status(401).send('token expired :(')
+        return {}
+      } else {
+        return Promise.reject(err)
+      }
+    })
+  if (!uid) return
+
+  // At this point, I should now have access to the user's Schoology
+  const apiResult = await oauth.get(`${apiBase}/users/${uid}/sections`, key, secret)
+    .then(toJson)
+  return res.send(`<h4>Courses</h4><ul>${
+    apiResult.section.map(section => {
+      return `<li>${section.course_title}: ${section.section_title}</li>`
+    }).join('') || '<li>No courses were found for this user.</li>'
+  }</ul>`)
+})
 
 app.get("/callback", (req, res) => {
-
-  const code = req.query.code;
-  request.post({
-    url: "https://api.schoology.com/v1/oauth/token",
-    form: {
-      client_id: clientId,
-      client_secret: clientSecret,
-      redirect_uri: callbackUrl,
-      grant_type: "authorization_code",
-      code: code
-    }
-  }, (error, response, body) => {
-    const json = JSON.parse(body);
-    const accessToken = json.access_token;
-
-    request.get({
-      url: "https://api.schoology.com/v1/users/me",
-      headers: {
-        "Authorization": `Bearer ${accessToken}`
-      }
-    }, (error, response, body) => {
-      const json = JSON.parse(body);
-      const name = json.name;
-      request.get({
-        url: `https://api.schoology.com/v1/users/me/sections`,
-        headers: {
-          "Authorization": `Bearer ${accessToken}`
-        }
-      }, (error, response, body) => {
-        const json = JSON.parse(body);
-        const courses = json.section;
-        res.json({ name, courses });
-      });
-    });
-  });
+    app.post('/home', function (req, res) {
+      res.json({oauth_token: req.query.oauth_token})
+    })
+    res.redirect("/home");
+    console.log(localStorage.getItem("oauth_token"));
 });
 
-// make it return client/index.html for /
-app.get("/" , (req, res) => {
-    res.sendFile(__dirname + "/client/index.html");
-});
+app.get('/home', function (req, res) {
+  res.sendFile('home.html', { root: __dirname })});
 
 
-app.get('/auth/example',
-  passport.authenticate('schoology'));
 
-app.get('/auth/example/callback', 
-  passport.authenticate('schoology', { failureRedirect: '/login', successRedirect: '/' }));
-
-app.listen(3000, () => {
-  console.log("Server started on http://localhost:3000");
-});
+app.listen(port, () => {
+  console.log(`Example app listening at http://localhost:${port}`)
+})
