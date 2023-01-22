@@ -1,7 +1,9 @@
-// node oauth-3leg/app2.js
-
+// thanks to sean for the baseplat schoology login
 const express = require('express')
+var cookieParser = require('cookie-parser')
 const app = express()
+app.use(cookieParser())
+
 const port = 3000
 
 const nodeUtil = require('util')
@@ -9,8 +11,8 @@ const nodeUtil = require('util')
 const apiBase = 'https://api.schoology.com/v1'
 const sgyDomain = 'https://app.schoology.com'
 
-const key = "dcc125ec557819caff204e151c470240063ccaf06";
-const secret = "685443c62633b13178025bb47b5f9e78";
+const key = "657face5a689f9fb2441e558006ab0f4063cd1a50";
+const secret = "74c0cbab174ec6eabc9ee7edacdd00ee";
 
 const { OAuth } = require('oauth')
 const oauth = new OAuth(
@@ -56,7 +58,7 @@ function toJson ([data]) {
 function follow303 (err) {
   if (err.statusCode === 303) {
     const [, request] = err.out
-    console.log(request.headers.location)
+    // console.log(request.headers.location)
     return oauth.get(request.headers.location, ...err.args.slice(1))
   } else {
     return Promise.reject(err)
@@ -66,11 +68,20 @@ function follow303 (err) {
 const requestTokens = new Map()
 const accessTokens = new Map()
 
-app.get('/', async (req, res) => {
+
+app.get('/register', (req, res) => {
+  res.sendFile('register.html', { root: __dirname })
+})
+
+app.get("/", (req, res) => {
+  res.redirect('/register')});
+
+app.get('/link', async (req, res) => {
   // A primitive way of getting the user ID.
-  const userId = req.query.whomst
+  const userId = req.query.userid
+  const username = atob(req.query.username)
   if (!userId) {
-    return res.sendFile('whomst.html', { root: __dirname })
+    res.redirect("/register")
   }
 
   const token = accessTokens.get(userId)
@@ -99,7 +110,7 @@ app.get('/', async (req, res) => {
       const [key, secret] = await oauth.getOAuthRequestToken()
       requestTokens.set(userId, { key, secret })
       // https://stackoverflow.com/a/10185427
-      const fullUrl = "superindianredpagerecognition.agastyasandhuja.repl.co/callback"
+      const fullUrl = req.get('host') + req.originalUrl
       return res.redirect(`${sgyDomain}/oauth/authorize?${new URLSearchParams({
         oauth_callback: fullUrl,
         oauth_token: key
@@ -130,6 +141,10 @@ app.get('/', async (req, res) => {
     })
   if (!uid) return
 
+  res.cookie('userid', userId)
+  res.cookie('username', username)
+  res.cookie("uid", uid)
+  console.log("cookies set")
   // At this point, I should now have access to the user's Schoology
   const apiResult = await oauth.get(`${apiBase}/users/${uid}/sections`, key, secret)
     .then(toJson)
@@ -140,13 +155,6 @@ app.get('/', async (req, res) => {
   }</ul>`)
 })
 
-app.get("/callback", (req, res) => {
-    app.post('/home', function (req, res) {
-      res.json({oauth_token: req.query.oauth_token})
-    })
-    res.redirect("/home");
-    console.log(localStorage.getItem("oauth_token"));
-});
 
 app.get('/home', function (req, res) {
   res.sendFile('home.html', { root: __dirname })});
