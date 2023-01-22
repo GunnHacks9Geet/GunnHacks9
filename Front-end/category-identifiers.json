@@ -1,0 +1,21 @@
+{
+    "Activity" : "Activity",
+    "HW": "Homework",
+    "Lab": "Lab",
+    "Homework": "Homework",
+    "Act" : "Activity",
+    "Essay": "Essay",
+    "Exam": "Test Prep",
+    "Quiz": "Test Prep",
+    "Discussion": "Discussion",
+    "Socratic": "Discussion",
+    "Seminar": "Discussion",
+    "Project": "Project",
+    "Presentation": "Project",
+    "Summative": "Test prep",
+    "Worksheet": "Homework",
+    "Exercise":"Homework",
+    "Paper": "Essay",
+    "DBQ": "Essay",
+    "CER": "Essay"
+}

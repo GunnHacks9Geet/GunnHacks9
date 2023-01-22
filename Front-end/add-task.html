@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="stylesheet" href="style.css">
+        <script src="add-task.js"></script>
+        <title>Add a task:</title>
+    </head>
+    <body>
+        <h1>Add a Task:</h1>
+        <form><div>
+            <div class="label-div override-div"><label for="taskName">Task Name:</label></div>
+            <div class="input-div override-div">
+                <input type="text" id="taskName" autocomplete="off" onkeyup="showResults(this.value)" required="" style="
+    position: FIXED;
+">
+        <div id="autocomplete-result" style="
+        position: ABSOLUTE;
+        top: 150px;
+        background: lightgray;
+        margin: 0;
+        "></div>
+            </div>
+            
+        </div>
+        <div>
+            <div class="label-div override-div"><label for="taskType">Type: </label></div>
+            <div class="input-div override-div"><select id="taskType" required>
+                <option>Essay</option>
+                <option>Test prep</option>
+                <option>Activity</option>
+                <option>Homework</option>
+                <option>Lab</option>
+                <option>Project</option>
+                <option>Discussion</option>
+            </select></div>
+        </div>
+        <h3>If your task is something that has a fixed time, such as work, add it below.</h3>
+        <div>
+            <div class="label-div override-div"><label for="startTime">Start Time:</label></div>
+            <div class="input-div override-div"><input type="time" id="startTime"></div>
+        </div>
+        <div>
+            <div class="label-div override-div"><label for="endTime">End Time:</label></div>
+            <div class="input-div override-div"><input type="time" id="endTime"></div>
+        </div>
+        <div>
+            <button class="welcome-btn" id="add-task-btn">Add</button>
+        </div>
+        </form>
+        <script>
+            const search_terms = ['apple', 'apple watch', 'apple macbook', 'apple macbook pro', 'iphone', 'iphone 12'];
+            //change this to the titles of schoology assignments
+
+            function autocompleteMatch(input) {
+                if (input == '') {
+                    return [];
+                }
+                var reg = new RegExp(input)
+                return search_terms.filter(function(term) {
+                    if (term.match(reg)) {
+                    return term;
+                    }
+                });
+            }
+
+            function showResults(val) {
+                res = document.getElementById("autocomplete-result");
+                res.innerHTML = '';
+                let list = '';
+                let terms = autocompleteMatch(val);
+                for (i=0; i<terms.length; i++) {
+                    list += '<li>' + terms[i] + '</li>';
+                }
+                res.innerHTML = '<ul>' + list + '</ul>';
+            }
+            //TODO: after we click off the autocomplete form, then it should delete the ul element
+        </script>
+    </body>
+</html>
