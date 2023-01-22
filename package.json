@@ -1,0 +1,12 @@
+{
+  "dependencies": {
+    "express": "^4.18.2",
+    "oauthorize": "^0.1.0",
+    "passport": "^0.6.0",
+    "passport-http-oauth": "^0.1.3",
+    "passport-oauth1": "^1.2.0",
+    "passport-oauth2": "^1.6.1",
+    "passport-schoology-oauth": "^1.0.3",
+    "request": "^2.88.2"
+  }
+}
