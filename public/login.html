@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html>
+  <center>
     <!--  login page  -->
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>Login</title>
         <meta name="description" content="whomst" />
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css">
         <h1>Login</h1>
         <script>
             async function sha256(source) {
@@ -25,12 +27,12 @@
               var dataString = JSON.stringify(formData);
               if (!document.cookie) {
               sha256(dataString).then(function(hashedData) {
-                  window.location.href = '/link?username=' + btoa($('input[name=username]').val(),) +'&userid=' + hashedData;
+                  window.location.href = '/register'//?username=' + btoa($('input[name=username]').val(),) +'&userid=' + hashedData;
                   console.log(1)
               });
             }
             else {
-                window.location.href = "/home"
+                window.location.href = "/link"
                 console.log(2)
             }
 
@@ -51,4 +53,5 @@
             <input type="submit" value="ok">
         </form>
     </body>
+    </center>
 </html>

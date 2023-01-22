@@ -3,16 +3,18 @@ window.onload = () => {
         let addedTaskName, addedTaskType, startTime, endTime;
         addedTaskName = document.getElementById("taskName").value;
         addedTaskType = document.getElementById("taskType").value;
+        //TODO: load the html content from account.js into the DROPDOWN MENU here.
         if(startTime.value)
         {
             startTime = document.getElementById("startTime").value;
             endTime = document.getElementById("endTime").value;
         }
         let addedTaskData = [addedTaskName, addedTaskType, startTime, endTime];
-        //localStorage.setItem("addedTaskData", JSON.stringify(addedTaskData)); //We should have an array of task types in local storage
-        //if any of them have start/ending times, then we should add
-        //JSON.stringify turns it into a string; in the reverse direction, we use parse.
-        //i.e. JSON.parse(localStorage.getItem(...))
         document.location.href = "./tasks.html";
+
+        //this means that this code has to set the data to the previous data with a semicolon and a new array
+        //which means we have to ORIGINALLY initialize the array to something, maybe an empty string.
+        localStorage.setItem("taskData", localStorage.getItem("taskData") + ";" + addedTaskData);
+        //when parsing through it, we need to make it into an array then SORT the array based on time
     });
 }
