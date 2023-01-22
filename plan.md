@@ -1,0 +1,4 @@
+- we make a register page with a username/password
+- the userid becomes the hash of the username and password stringed together
+- we then send them to /link with the new userid
+- they link their schoology accounts and will be redirected to the home page
