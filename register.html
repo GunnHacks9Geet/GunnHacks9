@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Register</title>
+        <meta name="description" content="whomst" />
+        <h1>Register an Account</h1>
+    </head>
+    <script language="JavaScript" type="text/javascript" src="https://code.jquery.com/jquery-3.6.3.js"></script>
+
+    <script>
+              async function sha256(source) {
+    const sourceBytes = new TextEncoder().encode(source);
+    const digest = await crypto.subtle.digest("SHA-256", sourceBytes);
+    const resultBytes = [...new Uint8Array(digest)];
+    return resultBytes.map(x => x.toString(16).padStart(2, '0')).join("");
+};
+   
+        $(document).ready(function() {
+            $('form#register-form').submit(function(event) {
+                event.preventDefault();
+                var formData = {
+                    'username': $('input[name=username]').val(),
+                    'password': $('input[name=password]').val()
+                };
+                var dataString = JSON.stringify(formData);
+                sha256(dataString).then(function(hashedData) {
+                    window.location.href = '/link?username=' + btoa($('input[name=username]').val(),) +'&userid=' + hashedData;
+                });
+            });
+        });
+    </script>
+    
+    <body>
+        <form id="register-form" action="/link" method="get">
+            <p>
+                <label>
+                    Username:
+                    <input type="text" name="username" placeholder="Username" autofocus>
+                    Password:
+                    <input type="password" name="password" placeholder="Password" autofocus>
+                </label>
+            </p>
+            <input type="submit" value="ok">
+        </form>
+    </body>
+</html>
